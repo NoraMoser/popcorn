@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const tempMovieData = [
   {
@@ -49,10 +49,50 @@ const tempWatchedData = [
 
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
+const incidents = [
+  { incident_id: 101, latitude: 40.7128, longitude: -74.006 },
+  { incident_id: 102, latitude: 34.0522, longitude: -118.2437 },
+  { incident_id: 103, latitude: 40.713, longitude: -74.0062 },
+  { incident_id: 104, latitude: 41.8781, longitude: -87.6298 },
+  { incident_id: 105, latitude: 29.7604, longitude: -95.3698 },
+  { incident_id: 106, latitude: 29.7605, longitude: -95.3697 },
+  { incident_id: 107, latitude: 37.7749, longitude: -122.4194 },
+];
 
 export default function App() {
   const [movies, setMovies] = useState(tempMovieData);
   const [watched, setWatched] = useState(tempWatchedData);
+  const [uniqueIncidents, setUniqueIncidents] = useState(incidents);
+
+  function findUniqueIncidents(incidents) {
+    const areaMap = new Map();
+
+    for (const incident of incidents) {
+      const lat = incident.latitude.toFixed(2);
+      const lon = incident.longitude.toFixed(2);
+      const key = `${lat},${lon}`;
+
+      if (!areaMap.has(key)) areaMap.set(key, []);
+      areaMap.get(key).push(incident.incident_id);
+    }
+
+    console.log(areaMap);
+
+    const uniqueIds = [];
+    for (const [key, ids] of areaMap.entries()) {
+      if (ids.length === 1) uniqueIds.push(ids[0]);
+    }
+
+    return uniqueIds;
+  }
+
+  useEffect(() => {
+    const uniqueIds = findUniqueIncidents(incidents);
+    const uniqueObjects = incidents.filter((inc) =>
+      uniqueIds.includes(inc.incident_id)
+    );
+    setUniqueIncidents(uniqueObjects);
+  }, []);
 
   return (
     <>
@@ -60,6 +100,20 @@ export default function App() {
         <Search />
         <NumResults movies={movies} />
       </NavBar>
+      <div className="box">
+        <h2>Unique Incidents</h2>
+        {uniqueIncidents.length === 0 ? (
+          <p>No unique incidents found.</p>
+        ) : (
+          <ul>
+            {uniqueIncidents.map((incident) => (
+              <li key={incident.incident_id}>
+                Incident ID: {incident.incident_id}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <Main>
         <Box>
